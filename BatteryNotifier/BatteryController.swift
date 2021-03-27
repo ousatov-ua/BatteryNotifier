@@ -17,13 +17,14 @@ struct Settings {
 enum Action {
     case Connect
     case Disconnect
+    case Nothing
 }
 
 class BatteryController {
     let defaultMin:Double = 20;
     let defaultMax:Double = 80;
     let userDefaults:UserDefaults
-    var currentLevel:Float = -1;
+    var currentLevel:Int = -1;
     
     let userNotificationCenter:UNUserNotificationCenter
     
@@ -68,27 +69,41 @@ class BatteryController {
 
     @objc func levelChanged(notification: Notification) {
         if let value = notification.object as? Float{
-            checkBatteryLevel(value: value)
+            checkBatteryLevel(newValue: value)
         }       
     }
     
-    func checkBatteryLevel(value: Float){
-        
-        /*var currentValue:Float = -1;
-        var currentValueInt:Int
-        var currentLevelInt:Int = Int(currentLevel)
-        var action:Action
-        if let value = notification.object as? Float{
-            currentValue = value*100
-            currentValueInt = Int(currentValue)
-            if(currentValueInt <= Int(self.defaultMin)){
-                currentLevel = defaultMin;
-                
-            }else if(currentValueInt >= Int(self.maxLevel)){
-                action = Action.Disconnect
+    func checkBatteryLevel(newValue: Float){
+        let newValueInt:Int = Int(newValue * 100)
+        var action:Action = Action.Nothing;
+        if(newValueInt < Int(self.minLevel)){
+            action = Action.Connect
+        }else if(newValueInt > Int(self.maxLevel)){
+            action = Action.Disconnect
+        }
+        var send:Bool = false
+        if(currentLevel == -1){
+            switch action {
+            case .Connect:
+                currentLevel = Int(self.maxLevel)
+                send = true
+            case .Disconnect:
+                currentLevel = Int(self.minLevel)
+                send = true
+            default:
+                currentLevel = -1
             }
-        } */
+        }else if(currentLevel == Int(self.minLevel) && action == .Connect){
+                currentLevel = Int(self.maxLevel)
+            send = true
+        } else if(currentLevel == Int(self.maxLevel) && action  == .Disconnect){
+                currentLevel = Int(self.minLevel)
+            send = true
+        }
+  
+        if(send){
         sendNotification(Action.Connect)
+        }
     }
     
     func getCurrentLevel()-> Float{
@@ -125,6 +140,4 @@ class BatteryController {
             }
         }
     }
-    
-    
 }

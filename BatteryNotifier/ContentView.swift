@@ -14,14 +14,13 @@ struct ContentView: View {
     @State private var minValue: Double = 10
     @State private var maxValue : Double = 90
     
+    
     init(batteryController: BatteryController){
         self.batteryController = batteryController;
     }
     
     var body: some View {
         VStack {
-            let level = Int(batteryController.getCurrentLevel()*100)
-            Text("Current Battery Level: \(level, specifier: "%d")")
             Text("Low battery notification: \(Int(minValue), specifier: "%d")")
             Slider(value: $minValue, in: 10...80, step: 1)
                 .padding(.horizontal, 50.0).onAppear(perform: {
@@ -45,12 +44,3 @@ struct ContentView: View {
             }
     }
 }
-
-/*
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-    }
-}
- 
- */
