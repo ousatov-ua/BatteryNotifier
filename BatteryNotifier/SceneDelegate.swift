@@ -8,18 +8,27 @@
 import UIKit
 import SwiftUI
 
-class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
 
     var window: UIWindow?
-
+    
+    let batteryController:BatteryController;
+    let userNotificationCenter: UNUserNotificationCenter
+    
+    override init(){
+        userNotificationCenter = UNUserNotificationCenter.current();
+        batteryController = BatteryController(userNotificationCenter: userNotificationCenter);
+        super.init()
+    }
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        batteryController.addMyselfAsObserver();
         // Create the SwiftUI view that provides the window contents.
-        let contentView = ContentView()
+        let contentView = ContentView(batteryController: batteryController)
 
         // Use a UIHostingController as window root view controller.
         if let windowScene = scene as? UIWindowScene {
@@ -28,9 +37,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             self.window = window
             window.makeKeyAndVisible()
         }
+        userNotificationCenter.requestAuthorization(options: [.sound, .alert, .carPlay, .badge]) { (success, error) in
+            if let error = error {
+                    print("Error: ", error)
+                }
+            }
+        self.userNotificationCenter.delegate = self
+        
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
+        NotificationCenter.default.removeObserver(batteryController);
         // Called as the scene is being released by the system.
         // This occurs shortly after the scene enters the background, or when its session is discarded.
         // Release any resources associated with this scene that can be re-created the next time the scene connects.
@@ -53,9 +70,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        batteryController.addMyselfAsObserver()
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        completionHandler()
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.list, .banner, .sound])
     }
 
 
