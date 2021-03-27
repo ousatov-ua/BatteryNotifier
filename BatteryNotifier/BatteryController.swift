@@ -1,5 +1,5 @@
 //
-//  BatteryObserver.swift
+//  BatteryController.swift
 //  BatteryNotifier
 //
 //  Created by alus on 27.03.2021.
@@ -67,25 +67,27 @@ class BatteryController {
     }
 
     @objc func levelChanged(notification: Notification) {
-       
-        var valueChanged:Bool = false
-        var currentValue:Float = -1;
+        if let value = notification.object as? Float{
+            checkBatteryLevel(value: value)
+        }       
+    }
+    
+    func checkBatteryLevel(value: Float){
+        
+        /*var currentValue:Float = -1;
         var currentValueInt:Int
+        var currentLevelInt:Int = Int(currentLevel)
+        var action:Action
         if let value = notification.object as? Float{
             currentValue = value*100
-            currentValueInt = Int(currentValue);
+            currentValueInt = Int(currentValue)
             if(currentValueInt <= Int(self.defaultMin)){
-                valueChanged = true;
-            }else if(currentValueInt >= Int(self.maxLevel)){
-                valueChanged = true;
-            }
-        }
-        if(valueChanged){
-            if(currentLevel == -1){
-                currentLevel = currentValue;
+                currentLevel = defaultMin;
                 
+            }else if(currentValueInt >= Int(self.maxLevel)){
+                action = Action.Disconnect
             }
-        }
+        } */
         sendNotification(Action.Connect)
     }
     
@@ -110,6 +112,7 @@ class BatteryController {
         notificationContent.title = "Battery Notification"
         notificationContent.body = body
         notificationContent.sound = UNNotificationSound.default
+        notificationContent.badge = 0
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1,
                                                         repeats: false)

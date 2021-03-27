@@ -20,8 +20,8 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            
-            Text("Current Battery Level: \(Int(batteryController.getCurrentLevel())*100, specifier: "%d")")
+            let level = Int(batteryController.getCurrentLevel()*100)
+            Text("Current Battery Level: \(level, specifier: "%d")")
             Text("Low battery notification: \(Int(minValue), specifier: "%d")")
             Slider(value: $minValue, in: 10...80, step: 1)
                 .padding(.horizontal, 50.0).onAppear(perform: {
