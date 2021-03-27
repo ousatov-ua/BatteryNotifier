@@ -18,7 +18,7 @@ class AppRefreshOperation : Operation {
     }
     
     override func main() {
-        batteryController.checkBatteryLevel(value: batteryController.getCurrentLevel())
+        batteryController.checkBatteryLevel(newValue: batteryController.getCurrentLevel())
     }
     
 }
