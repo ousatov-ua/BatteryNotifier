@@ -131,7 +131,7 @@ class BatteryController {
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1,
                                                         repeats: false)
-        let request = UNNotificationRequest(identifier: "testNotification",
+        let request = UNNotificationRequest(identifier: "Battery Notification",
                                             content: notificationContent,
                                             trigger: trigger)
         userNotificationCenter.add(request) { (error) in
