@@ -89,11 +89,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
     }
     
     func sceneWillResignActive(_ scene: UIScene) {
-        UIDevice.current.isBatteryMonitoringEnabled = true
-        
-        scheduleAppRefresh()
-        
-        batteryController.addMyselfAsObserver()
         // Called when the scene will move from an active state to an inactive state.
         // This may occur due to temporary interruptions (ex. an incoming phone call).
     }
@@ -105,6 +100,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
     }
     
     func sceneDidEnterBackground(_ scene: UIScene) {
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        
+        scheduleAppRefresh()
+        
+        batteryController.addMyselfAsObserver()
         
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
