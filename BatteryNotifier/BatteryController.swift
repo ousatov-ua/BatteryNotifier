@@ -77,13 +77,14 @@ class BatteryController {
         var action:Action = Action.Nothing;
         let maxInt = Int(self.maxLevel)
         let minInt = Int(self.minLevel)
-        if(newValueInt < Int(self.minLevel)){
-            action = Action.Connect
-        }else if(newValueInt > Int(self.maxLevel)){
-            if(getBatteryStatus() == .charging){
+        let batteryStatus = getBatteryStatus()
+        if(newValueInt <= Int(self.minLevel)){
+            if(batteryStatus != .charging){
+                action = Action.Connect
+            }
+        }else if(newValueInt >= Int(self.maxLevel)){
+            if(batteryStatus == .charging){
                 action = Action.Disconnect
-            }else{
-                currentLevel = minInt
             }
         }
         var send:Bool = false
