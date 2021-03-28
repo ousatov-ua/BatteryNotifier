@@ -23,6 +23,7 @@ enum Action {
 class BatteryController {
     let defaultMin:Double = 20;
     let defaultMax:Double = 80;
+    let levelDiff = 3
     let userDefaults:UserDefaults
     var currentLevel:Int = -1;
     var previousCurrentLevel: Int = -1
@@ -102,7 +103,7 @@ class BatteryController {
             }
         }else if(action == .Connect){
             currentLevel = newValueInt
-            if(abs(previousCurrentLevel - newValueInt) > 3 || abs(newValueInt - minInt) <= 3){
+            if(abs(previousCurrentLevel - newValueInt) > levelDiff || abs(newValueInt - minInt) <= levelDiff){
                 previousCurrentLevel = currentLevel
                 send = true
             }
