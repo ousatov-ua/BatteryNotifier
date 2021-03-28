@@ -25,6 +25,7 @@ class BatteryController {
     let defaultMax:Double = 80;
     let userDefaults:UserDefaults
     var currentLevel:Int = -1;
+    var previousCurrentLevel: Int = -1
     
     let userNotificationCenter:UNUserNotificationCenter
     
@@ -61,11 +62,11 @@ class BatteryController {
             return defaultMax;
         }
         set {
-                self.userDefaults.setValue(newValue, forKey: Settings.maxLevel)
-                self.userDefaults.synchronize();
+            self.userDefaults.setValue(newValue, forKey: Settings.maxLevel)
+            self.userDefaults.synchronize();
         }
     }
-
+    
     @objc func levelChanged(notification: Notification) {
         if let value = notification.object as? Float{
             checkBatteryLevel(newValue: value)
@@ -78,11 +79,11 @@ class BatteryController {
         let maxInt = Int(self.maxLevel)
         let minInt = Int(self.minLevel)
         let batteryStatus = getBatteryStatus()
-        if(newValueInt <= Int(self.minLevel)){
+        if(newValueInt <= minInt){
             if(batteryStatus != .charging){
                 action = Action.Connect
             }
-        }else if(newValueInt >= Int(self.maxLevel)){
+        }else if(newValueInt >= maxInt){
             if(batteryStatus == .charging){
                 action = Action.Disconnect
             }
@@ -99,22 +100,26 @@ class BatteryController {
             default:
                 currentLevel = -1
             }
-        }else if(currentLevel == minInt && action == .Connect){
-                currentLevel = maxInt
-            send = true
-        } else if(currentLevel == maxInt && action  == .Disconnect){
-                currentLevel = minInt
+        }else if(action == .Connect){
+            currentLevel = newValueInt
+            if(abs(previousCurrentLevel - newValueInt) > 3 || abs(newValueInt - minInt) <= 3){
+                previousCurrentLevel = currentLevel
+                send = true
+            }
+        } else if(action  == .Disconnect){
+            previousCurrentLevel = minInt;
+            currentLevel = minInt
             send = true
         }
-  
+        
         if(send){
-        sendNotification(action)
+            sendNotification(action)
         }
     }
     
     func getCurrentLevel()-> Float{
         return UIDevice.current.batteryLevel
-
+        
     }
     
     func getBatteryStatus() ->  UIDevice.BatteryState {
@@ -124,7 +129,7 @@ class BatteryController {
     func sendNotification(_ action: Action) -> Void {
         // Create new notifcation content instance
         let notificationContent = UNMutableNotificationContent()
-
+        
         // Add the content to the notification content
         
         var body: String;
@@ -140,7 +145,7 @@ class BatteryController {
         notificationContent.badge = 0
         
         /*let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1,
-                                                        repeats: false) */
+         repeats: false) */
         let request = UNNotificationRequest(identifier: "Battery Notification",
                                             content: notificationContent,
                                             trigger: nil)
