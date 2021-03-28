@@ -24,20 +24,19 @@ class AppRefreshOperation : Operation {
 }
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
-
+    
     var window: UIWindow?
     
     let batteryController:BatteryController;
     let userNotificationCenter: UNUserNotificationCenter
-    let operationQueue: OperationQueue;
+    let refreshInterval:Double = 5 * 60;
     
     override init(){
         userNotificationCenter = UNUserNotificationCenter.current();
         batteryController = BatteryController(userNotificationCenter: userNotificationCenter);
-        operationQueue = OperationQueue()
         super.init()
     }
-
+    
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
@@ -46,7 +45,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         batteryController.addMyselfAsObserver();
         // Create the SwiftUI view that provides the window contents.
         let contentView = ContentView(batteryController: batteryController)
-
+        
         // Use a UIHostingController as window root view controller.
         if let windowScene = scene as? UIWindowScene {
             let window = UIWindow(windowScene: windowScene)
@@ -56,20 +55,25 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         }
         userNotificationCenter.requestAuthorization(options: [.sound, .alert, .carPlay, .badge]) { (success, error) in
             if let error = error {
-                    print("Error: ", error)
-                }
+                print("Error: ", error)
             }
+        }
         self.userNotificationCenter.delegate = self
-        
+  
         BGTaskScheduler.shared.register(
-                    forTaskWithIdentifier: "com.alus.product.BatteryMonitor.refresh",
+            forTaskWithIdentifier: "com.alus.product.BatteryMonitor.refresh",
             using: DispatchQueue.global()
-                ) { task in
-                    self.handleAppRefresh(task: task as! BGAppRefreshTask)
-                }
+        ) { task in
+            self.handleAppRefresh(task)
+        }
+        
+        // Additionally we add timer for level check
+        Timer.scheduledTimer(withTimeInterval: self.refreshInterval, repeats: true) { (t) in
+            self.batteryController.checkBatteryLevel(newValue: self.batteryController.getCurrentLevel())
+        }
         
     }
-
+    
     func sceneDidDisconnect(_ scene: UIScene) {
         NotificationCenter.default.removeObserver(batteryController);
         // Called as the scene is being released by the system.
@@ -77,12 +81,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         // Release any resources associated with this scene that can be re-created the next time the scene connects.
         // The scene may re-connect later, as its session was not necessarily discarded (see `application:didDiscardSceneSessions` instead).
     }
-
+    
     func sceneDidBecomeActive(_ scene: UIScene) {
         // Called when the scene has moved from an inactive state to an active state.
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
     }
-
+    
     func sceneWillResignActive(_ scene: UIScene) {
         UIDevice.current.isBatteryMonitoringEnabled = true
         
@@ -92,13 +96,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         // Called when the scene will move from an active state to an inactive state.
         // This may occur due to temporary interruptions (ex. an incoming phone call).
     }
-
+    
     func sceneWillEnterForeground(_ scene: UIScene) {
         //TODO
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
     }
-
+    
     func sceneDidEnterBackground(_ scene: UIScene) {
         
         // Called as the scene transitions from the foreground to the background.
@@ -109,44 +113,38 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         completionHandler()
     }
-
+    
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.list, .banner, .sound])
     }
-
-    private func handleAppRefresh(task: BGAppRefreshTask) {
-        scheduleAppRefresh()
+    
+    private func handleAppRefresh(_ task: BGTask) {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+        let appRefreshOperation = AppRefreshOperation(batteryController: self.batteryController)
+        queue.addOperation(appRefreshOperation)
         
-
-           // Create an operation that performs the main part of the background task
-            let operation = AppRefreshOperation(batteryController: self.batteryController)
-           
-           // Provide an expiration handler for the background task
-           // that cancels the operation
-           task.expirationHandler = {
-              operation.cancel()
-           }
-
-           // Inform the system that the background task is complete
-           // when the operation completes
-           operation.completionBlock = {
-              task.setTaskCompleted(success: !operation.isCancelled)
-           }
-
-           // Start the operation
-           operationQueue.addOperation(operation)
+        task.expirationHandler = {
+            queue.cancelAllOperations()
         }
+        
+        let lastOperation = queue.operations.last
+        lastOperation?.completionBlock = {
+            task.setTaskCompleted(success: !(lastOperation?.isCancelled ?? false))
+        }
+        
+        scheduleAppRefresh()
+    }
     
     private func scheduleAppRefresh() {
-            do {
-                let request = BGAppRefreshTaskRequest(identifier: "com.alus.product.BatteryMonitor.refresh")
-                request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
-                try BGTaskScheduler.shared.submit(request)
-            } catch {
-                print(error)
-            }
+        do {
+            let request = BGAppRefreshTaskRequest(identifier: "com.alus.product.BatteryMonitor.refresh")
+            request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
+            try BGTaskScheduler.shared.submit(request)
+        } catch {
+            print(error)
         }
-
-
+    }
+    
 }
 

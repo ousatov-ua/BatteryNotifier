@@ -85,7 +85,7 @@ class BatteryController {
                 action = Action.Connect
             }
         }else if(newValueInt >= maxInt){
-            if(batteryStatus == .charging){
+            if(batteryStatus != .unplugged){
                 action = Action.Disconnect
             }
         }
