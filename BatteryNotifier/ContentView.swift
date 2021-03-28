@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var maxValue : Double = 90
     
     @State private var errorMessage:String = ""
+    @State private var saveDisabled: Bool = true;
     
     
     init(batteryController: BatteryController){
@@ -23,21 +24,39 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
+            Text("Battery Notifier").font(.largeTitle)
             Text("Specify lower and uppper limits:")
-                .fontWeight(/*@START_MENU_TOKEN@*/.bold/*@END_MENU_TOKEN@*/)
+                .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
                 .padding(.vertical, 20)
-                .shadow(color: .blue, radius: /*@START_MENU_TOKEN@*/10/*@END_MENU_TOKEN@*/, x: /*@START_MENU_TOKEN@*/0.0/*@END_MENU_TOKEN@*/, y: /*@START_MENU_TOKEN@*/0.0/*@END_MENU_TOKEN@*/)
             
-            
-            Text("Low battery notification: \(Int(minValue), specifier: "%d")")
-            
-            Slider(value: $minValue, in: 10...80, step: 1)
-                .padding(.horizontal, 50.0).onAppear(perform: {
+            HStack{
+                Text("Low battery notification:")
+                Spacer()
+                Text("\(Int(minValue), specifier: "%d") %")
+            }.padding(.horizontal, 60)
+            Slider(value: $minValue, in: 10...100, step: 1,
+                   onEditingChanged: {editing in
+                    if(!editing){
+                        saveDisabled = isNotChanged()
+                    }
+                   })
+                .padding(.horizontal, 50.0)
+                .onAppear(perform: {
                     self.minValue = Double(self.batteryController.minLevel)
                 })
-            Text("Full battery notification: \(Int(maxValue), specifier: "%d")")
+            HStack {
+                Text("Full battery notification:")
+                Spacer()
+                Text("\(Int(maxValue), specifier: "%d") %")
+            }.padding(.horizontal, 60)
             
-            Slider(value: $maxValue, in: 20 ... 80, step: 1)
+            
+            Slider(value: $maxValue, in: 10 ... 100, step: 1,
+                   onEditingChanged: {editing in
+                    if(!editing){
+                        saveDisabled = isNotChanged()
+                    }
+                   })
                 .padding(.horizontal, 50.0).onAppear(perform: {
                     self.maxValue = Double(self.batteryController.maxLevel);
                 })
@@ -49,18 +68,26 @@ struct ContentView: View {
                     batteryController.minLevel = minValue
                     batteryController.maxLevel = maxValue
                     errorMessage = ""
+                    saveDisabled = isNotChanged()
                 }
             }){
                 Text("Save")
                     .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
                     .cornerRadius(40)
-                    .overlay(RoundedRectangle(cornerRadius: 40).stroke(Color.blue, lineWidth: 2))
-            }
+                    .overlay(RoundedRectangle(cornerRadius: 40).stroke(Color.blue, lineWidth: 1))
+            }.disabled(saveDisabled)
             Text(errorMessage).padding(.vertical, 10)
                 .shadow(color: .red, radius: /*@START_MENU_TOKEN@*/10/*@END_MENU_TOKEN@*/, x: /*@START_MENU_TOKEN@*/0.0/*@END_MENU_TOKEN@*/, y: /*@START_MENU_TOKEN@*/0.0/*@END_MENU_TOKEN@*/)
+                .font(.caption)
             Spacer()
         }.padding(.vertical, 50)
+        .border(Color.black, width: 0.3)
     }
+    
+    func isNotChanged() -> Bool{
+        return Int(minValue) == Int(batteryController.minLevel) && Int(maxValue) == Int(batteryController.maxLevel)
+    }
+    
 }
 
 
