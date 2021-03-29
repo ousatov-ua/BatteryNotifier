@@ -132,7 +132,6 @@ class BatteryController {
         let notificationContent = UNMutableNotificationContent()
         
         // Add the content to the notification content
-        
         var body: String;
         switch action {
         case .Connect:
