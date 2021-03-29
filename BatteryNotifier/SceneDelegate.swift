@@ -31,6 +31,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
     let userNotificationCenter: UNUserNotificationCenter
     let refreshInterval:Double = 5 * 60;
     let backgroundRefreshInterval:Double = 15 * 60
+    let bgTaskId = "com.alus.product.BatteryMonitor.refresh"
     
     override init(){
         userNotificationCenter = UNUserNotificationCenter.current();
@@ -60,7 +61,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         
         if #available(iOS 13, *) {
             BGTaskScheduler.shared.register(
-                forTaskWithIdentifier: "com.alus.product.BatteryMonitor.refresh",
+                forTaskWithIdentifier: bgTaskId,
                 using: DispatchQueue.global()
             ) { task in
                 self.handleAppRefresh(task)
@@ -128,7 +129,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
     @available(iOS 13.0, *)
     private func scheduleAppRefresh() {
         do {
-            let request = BGAppRefreshTaskRequest(identifier: "com.alus.product.BatteryMonitor.refresh")
+            let request = BGAppRefreshTaskRequest(identifier: bgTaskId)
             request.earliestBeginDate = Date(timeIntervalSinceNow: backgroundRefreshInterval)
             try BGTaskScheduler.shared.submit(request)
         } catch {
