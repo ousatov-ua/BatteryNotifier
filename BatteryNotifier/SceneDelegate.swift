@@ -61,11 +61,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         }
         self.userNotificationCenter.delegate = self
         
-        BGTaskScheduler.shared.register(
-            forTaskWithIdentifier: "com.alus.product.BatteryMonitor.refresh",
-            using: DispatchQueue.global()
-        ) { task in
-            self.handleAppRefresh(task)
+        if #available(iOS 13, *) {
+            BGTaskScheduler.shared.register(
+                forTaskWithIdentifier: "com.alus.product.BatteryMonitor.refresh",
+                using: DispatchQueue.global()
+            ) { task in
+                self.handleAppRefresh(task)
+            }
         }
         
         // Additionally we add timer for level check
@@ -101,10 +103,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
     
     func sceneDidEnterBackground(_ scene: UIScene) {
         UIDevice.current.isBatteryMonitoringEnabled = true
-        
-        scheduleAppRefresh()
-        
         batteryController.addMyselfAsObserver()
+        
+        if #available(iOS 13, *) {
+            scheduleAppRefresh()
+        }
+        
         
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
@@ -137,6 +141,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         scheduleAppRefresh()
     }
     
+    @available(iOS 13.0, *)
     private func scheduleAppRefresh() {
         do {
             let request = BGAppRefreshTaskRequest(identifier: "com.alus.product.BatteryMonitor.refresh")
