@@ -25,7 +25,7 @@ struct ContentView: View {
     var body: some View {
         VStack {
             Text("Battery Notifier").font(.largeTitle)
-            Text("Specify lower and uppper limits:")
+            Text("Lower and uppper limits:")
                 .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
                 .padding(.vertical, 20)
             
