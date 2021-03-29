@@ -7,6 +7,6 @@ It uses background refresh to make these actions in background hovewer this is m
 
 ## Screenshot
 
-![alt text](screen.jpg?raw=true)
+![alt text](screen.png?raw=true)
 
 
